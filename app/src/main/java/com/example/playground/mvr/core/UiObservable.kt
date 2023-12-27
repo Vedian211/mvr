@@ -1,12 +1,10 @@
-package com.example.playground.mvr
+package com.example.playground.mvr.core
 
 import androidx.annotation.MainThread
 
-interface UiObservable<T: Any>: UiUpdate<T> {
+interface UiObservable<T: Any>: UiUpdate<T>, UpdateObserver<T> {
 
-    fun updateObserver(uiObserver: UiObserver<T> = UiObserver.Empty())
-
-    class Single<T: Any>: UiObservable<T> {
+    abstract class Single<T: Any>: UiObservable<T> {
 
         @Volatile
         private var observer: UiObserver<T> = UiObserver.Empty()
@@ -36,6 +34,10 @@ interface UiObservable<T: Any>: UiUpdate<T> {
             }
         }
     }
+}
+
+interface UpdateObserver<T: Any> {
+    fun updateObserver(uiObserver: UiObserver<T> = UiObserver.Empty())
 }
 
 interface UiUpdate<T: Any> {

@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Playground</string>
     <string name="hello">Hello</string>
+    <string name="playing">Playing</string>
+    <string name="play">Play</string>
+    <string name="subscribe">Subscribe</string>
 </resources>

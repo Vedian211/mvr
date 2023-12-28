@@ -4,5 +4,5 @@ import com.example.playground.mvr.core.UiObservable
 import com.example.playground.mvr.core.UiObserver
 
 interface PremiumDashboardObservable: UiObservable<PremiumDashboardUiState> {
-    class Base: UiObservable.Single<PremiumDashboardUiState>(), PremiumDashboardObservable
+    class Base: UiObservable.Single<PremiumDashboardUiState>(PremiumDashboardUiState.Empty), PremiumDashboardObservable
 }

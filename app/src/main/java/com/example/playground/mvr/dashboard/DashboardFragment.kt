@@ -10,7 +10,7 @@ import com.example.playground.mvr.main.BaseFragment
 
 class DashboardFragment: BaseFragment<DashboardRepresentative>(R.layout.fragment_dashboard) {
 
-    private lateinit var callback: UiObserver<PremiumDashboardUiState>
+    private lateinit var callback: DashboardObserver
     override val clazz = DashboardRepresentative::class.java
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -18,7 +18,7 @@ class DashboardFragment: BaseFragment<DashboardRepresentative>(R.layout.fragment
         val button = view.findViewById<CustomButton>(R.id.playButton)
         val textView = view.findViewById<CustomTextView>(R.id.showPlayingTextView)
 
-        callback = object : UiObserver<PremiumDashboardUiState> {
+        callback = object : DashboardObserver {
             override fun update(data: PremiumDashboardUiState) {
                 data.show(button, textView)
             }
@@ -38,4 +38,8 @@ class DashboardFragment: BaseFragment<DashboardRepresentative>(R.layout.fragment
         representative.stopGettingUpdates()
         println("Dashboard, onPause")
     }
+}
+
+interface DashboardObserver: UiObserver<PremiumDashboardUiState> {
+    override fun isEmpty() = false
 }

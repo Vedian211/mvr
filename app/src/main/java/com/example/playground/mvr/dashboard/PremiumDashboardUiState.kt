@@ -12,4 +12,8 @@ interface PremiumDashboardUiState {
             text.show()
         }
     }
+
+    object Empty: PremiumDashboardUiState {
+        override fun show(button: HideAndShow, text: HideAndShow) = Unit
+    }
 }

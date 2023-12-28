@@ -30,4 +30,8 @@ interface Screen {
 
     object Dashboard: Replace(DashboardFragment::class.java)
     object Subscription: Add(SubscriptionFragment::class.java)
+
+    object Empty: Screen {
+        override fun show(fragmentManager: FragmentManager, containerId: Int) = Unit
+    }
 }

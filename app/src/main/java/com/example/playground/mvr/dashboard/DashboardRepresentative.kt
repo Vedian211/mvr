@@ -8,6 +8,7 @@ import com.example.playground.mvr.main.Screen
 interface DashboardRepresentative: Representative<PremiumDashboardUiState> {
 
     fun play()
+    fun observed() = Unit
 
     class Premium(private val observable: PremiumDashboardObservable): DashboardRepresentative {
         override fun play() {
@@ -21,6 +22,8 @@ interface DashboardRepresentative: Representative<PremiumDashboardUiState> {
         override fun stopGettingUpdates() {
             observable.updateObserver()
         }
+
+        override fun observed() = observable.clear()
     }
 
     class Base(private val navigation: Navigation.Update): DashboardRepresentative {

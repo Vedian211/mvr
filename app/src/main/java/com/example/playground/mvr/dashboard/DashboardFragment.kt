@@ -21,6 +21,7 @@ class DashboardFragment: BaseFragment<DashboardRepresentative>(R.layout.fragment
         callback = object : DashboardObserver {
             override fun update(data: PremiumDashboardUiState) {
                 data.show(button, textView)
+                data.observed(representative)
             }
         }
 
@@ -40,6 +41,4 @@ class DashboardFragment: BaseFragment<DashboardRepresentative>(R.layout.fragment
     }
 }
 
-interface DashboardObserver: UiObserver<PremiumDashboardUiState> {
-    override fun isEmpty() = false
-}
+interface DashboardObserver: UiObserver<PremiumDashboardUiState>

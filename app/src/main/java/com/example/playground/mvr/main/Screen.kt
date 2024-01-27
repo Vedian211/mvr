@@ -9,6 +9,7 @@ interface Screen {
 
     fun show(fragmentManager: FragmentManager, containerId: Int)
 
+    fun observed(representative: MainRepresentative) = representative.observed()
 
     abstract class Add(private val fragmentClass: Class<out Fragment>): Screen {
         override fun show(fragmentManager: FragmentManager, containerId: Int) {

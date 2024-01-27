@@ -48,6 +48,4 @@ class SubscriptionFragment: BaseFragment<SubscriptionRepresentative>(R.layout.fr
     }
 }
 
-interface SubscriptionObserver: UiObserver<SubscriptionUiState> {
-    override fun isEmpty() = false
-}
+interface SubscriptionObserver: UiObserver<SubscriptionUiState>

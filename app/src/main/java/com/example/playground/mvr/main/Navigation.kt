@@ -7,7 +7,9 @@ import com.example.playground.mvr.core.UpdateObserver
 interface Navigation {
     interface Update: UiUpdate<Screen>
     interface Observe: UpdateObserver<Screen>
-    interface Mutable: Update, Observe
+    interface Mutable: Update, Observe {
+        fun clear()
+    }
 
     class Base: UiObservable.Single<Screen>(Screen.Empty), Mutable
 }

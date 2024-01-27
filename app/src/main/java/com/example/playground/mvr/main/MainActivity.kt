@@ -21,6 +21,7 @@ class MainActivity: AppCompatActivity(), ProvideRepresentative {
         activityCallback = object : ActivityCallback {
             override fun update(data: Screen) = runOnUiThread {
                 data.show(supportFragmentManager, R.id.container)
+                data.observed(representative)
             }
         }
 
@@ -43,6 +44,4 @@ class MainActivity: AppCompatActivity(), ProvideRepresentative {
     }
 }
 
-interface ActivityCallback: UiObserver<Screen> {
-    override fun isEmpty() = false
-}
+interface ActivityCallback: UiObserver<Screen>

@@ -6,6 +6,7 @@ import com.example.playground.mvr.core.UiObserver
 interface MainRepresentative: Representative<Screen> {
 
     fun showDashboard(firstTime: Boolean)
+    fun observed()
 
     class Base(private val navigation: Navigation.Mutable): MainRepresentative {
         override fun showDashboard(firstTime: Boolean) {
@@ -21,5 +22,7 @@ interface MainRepresentative: Representative<Screen> {
         override fun stopGettingUpdates() {
             navigation.updateObserver()
         }
+
+        override fun observed() = navigation.clear()
     }
 }

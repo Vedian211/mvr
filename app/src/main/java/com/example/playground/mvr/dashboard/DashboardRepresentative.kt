@@ -25,10 +25,14 @@ interface DashboardRepresentative: Representative<PremiumDashboardUiState> {
         }
 
         override fun stopGettingUpdates() {
-            observable.updateObserver()
+            observable.updateObserver(EmptyDashboardObserver)
         }
 
         override fun observed() = observable.clear()
+    }
+
+    object EmptyDashboardObserver: DashboardObserver {
+        override fun update(data: PremiumDashboardUiState) = Unit
     }
 
     class Base(private val navigation: Navigation.Update): DashboardRepresentative {

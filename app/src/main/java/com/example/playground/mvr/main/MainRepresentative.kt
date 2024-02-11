@@ -20,9 +20,13 @@ interface MainRepresentative: Representative<Screen> {
         }
 
         override fun stopGettingUpdates() {
-            navigation.updateObserver()
+            navigation.updateObserver(EmptyMainObserver)
         }
 
         override fun observed() = navigation.clear()
     }
+}
+
+object EmptyMainObserver: ActivityCallback {
+    override fun update(data: Screen) = Unit
 }

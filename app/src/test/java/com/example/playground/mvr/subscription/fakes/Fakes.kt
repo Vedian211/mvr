@@ -1,4 +1,4 @@
-package com.example.playground.mvr.playing.fakes
+package com.example.playground.mvr.subscription.fakes
 
 import com.example.playground.mvr.core.ClearRepresentative
 import com.example.playground.mvr.core.HandleDeath

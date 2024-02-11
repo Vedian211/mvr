@@ -1,239 +1,269 @@
 package com.example.playground.mvr.subscription
 
 import com.example.playground.mvr.main.Screen
-import com.example.playground.mvr.playing.fakes.FakeClear
-import com.example.playground.mvr.playing.fakes.FakeHandelDeath
-import com.example.playground.mvr.playing.fakes.FakeInteractor
-import com.example.playground.mvr.playing.fakes.FakeNavigation
-import com.example.playground.mvr.playing.fakes.FakeObservable
-import com.example.playground.mvr.playing.fakes.FakeRunAsync
-import com.example.playground.mvr.playing.fakes.FakeSaveAndRestore
 import com.example.playground.mvr.subscription.presentation.EmptySubscriptionObserver
 import com.example.playground.mvr.subscription.presentation.SubscriptionObserver
 import com.example.playground.mvr.subscription.presentation.SubscriptionRepresentative
 import com.example.playground.mvr.subscription.presentation.SubscriptionUiState
-import org.junit.Before
+import com.example.playground.mvr.subscription.fakes.FakeClear
+import com.example.playground.mvr.subscription.fakes.FakeHandelDeath
+import com.example.playground.mvr.subscription.fakes.FakeInteractor
+import com.example.playground.mvr.subscription.fakes.FakeNavigation
+import com.example.playground.mvr.subscription.fakes.FakeObservable
+import com.example.playground.mvr.subscription.fakes.FakeRunAsync
+import com.example.playground.mvr.subscription.fakes.FakeSaveAndRestore
 import org.junit.Test
 
 class SubscriptionRepresentativeTest {
 
-    private lateinit var representative: SubscriptionRepresentative
-    private lateinit var fakeHandelDeath: FakeHandelDeath
-    private lateinit var observable: FakeObservable
-    private lateinit var interactor: FakeInteractor
-    private lateinit var navigation: FakeNavigation
-    private lateinit var runAsync: FakeRunAsync
-    private lateinit var clear: FakeClear
-
-    @Before
-    fun setup() {
-        fakeHandelDeath = FakeHandelDeath.Base()
-        observable = FakeObservable.Base()
-        interactor = FakeInteractor.Base()
-        navigation = FakeNavigation.Base()
-        runAsync = FakeRunAsync.Base()
-        clear = FakeClear.Base()
-
-        representative = SubscriptionRepresentative.Base(
-            handleDeath = fakeHandelDeath,
-            observable = observable,
-            interactor = interactor,
-            navigation = navigation,
-            runAsync = runAsync,
-            clear = clear
-        )
+    class TestObjects {
+        val saveAndRestore by lazy { FakeSaveAndRestore.Base() }
+        val fakeHandelDeath by lazy { FakeHandelDeath.Base() }
+        val observable by lazy { FakeObservable.Base() }
+        val interactor by lazy { FakeInteractor.Base() }
+        val navigation by lazy { FakeNavigation.Base() }
+        val runAsync by lazy { FakeRunAsync.Base() }
+        val clear by lazy { FakeClear.Base() }
+        val callback by lazy {
+            object : SubscriptionObserver {
+                override fun update(data: SubscriptionUiState) = Unit
+            }
+        }
+        val representative by lazy {
+            SubscriptionRepresentative.Base(
+                handleDeath = fakeHandelDeath,
+                observable = observable,
+                interactor = interactor,
+                navigation = navigation,
+                runAsync = runAsync,
+                clear = clear
+            )
+        }
     }
 
     @Test
-    fun main_scenario() {
-        val saveAndRestore = FakeSaveAndRestore.Base()
+    fun `When init and start getting update then ui state is initial and callback invoked`() = with(
+        TestObjects()
+    ) {
+        // When
         representative.init(saveAndRestore)
+        representative.startGettingUpdates(callback)
 
-        // asserts
+        // Then
         fakeHandelDeath.checkFirstOpeningCalled(1)
         observable.checkUiState(SubscriptionUiState.Initial)
         observable.checkUpdateCalledCount(1)
-
-        val callback = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
-        representative.startGettingUpdates(callback)
         observable.checkUpdateObserverCalled(callback)
+    }
 
+    @Test
+    fun `Given representative is initialized when subscribe then verify ui state`() = with(
+        TestObjects()
+    ) {
+        // When
         representative.subscribe()
+
+        // Then
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
         runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
+    }
 
-        representative.observed()
-        observable.checkClearCold()
-
+    @Test
+    fun `Given subscribed state when finish then navigate to Dashboard and clear resources`() = with(
+        TestObjects()
+    ) {
+        // When
         representative.finish()
+        representative.stopGettingUpdates()
+
+        // Then
         clear.clear(SubscriptionRepresentative::class.java)
         navigation.checkUpdated(Screen.Dashboard)
-
-        representative.stopGettingUpdates()
         observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
     }
 
     @Test
-    fun test_save_and_restore() {
-        val saveAndRestore = FakeSaveAndRestore.Base()
+    fun `When re-init after restore then verify first open and subscription update happened once`() = with(
+        TestObjects()
+    ) {
+        // When
         representative.init(saveAndRestore)
+        representative.startGettingUpdates(callback)
+
+        // Then
         fakeHandelDeath.checkFirstOpeningCalled(1)
         observable.checkUiState(SubscriptionUiState.Initial)
         observable.checkUpdateCalledCount(1)
-
-        val callback = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
-        representative.startGettingUpdates(callback)
         observable.checkUpdateObserverCalled(callback)
 
+        // When
         representative.stopGettingUpdates()
-        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
         representative.saveState(saveAndRestore)
 
+        // Then
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
+
+        // when
         representative.init(saveAndRestore)
+
+        // Then
         fakeHandelDeath.checkFirstOpeningCalled(1)
         observable.checkUpdateCalledCount(1)
     }
 
     @Test
-    fun test_death() {
-        val saveAndRestore = FakeSaveAndRestore.Base()
+    fun `Given death happened on loading step when re-init then death handled and state Empty state restored`() = with(
+        TestObjects()
+    ) {
+        // When
         representative.init(saveAndRestore)
+        representative.startGettingUpdates(callback)
 
-        // asserts
+        // Then
         fakeHandelDeath.checkFirstOpeningCalled(1)
         observable.checkUiState(SubscriptionUiState.Initial)
-
-        val callback = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
-        representative.startGettingUpdates(callback)
         observable.checkUpdateObserverCalled(callback)
 
+        // When
         representative.subscribe()
+
+        // Then
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
+
+        // When
         representative.stopGettingUpdates()
-        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
         representative.saveState(saveAndRestore)
 
-        // death
-        setup()
+        // Then
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
 
-        representative.init(saveAndRestore)
-        fakeHandelDeath.checkFirstOpeningCalled(0)
-        observable.checkUiState(SubscriptionUiState.Empty)
-        observable.checkUpdateCalledCount(0)
-        interactor.checkSubscribeCalledTimes(1)
+        // death
+        // Given
+        val testObject = TestObjects()
+
+        // When
+        testObject.representative.init(saveAndRestore)
+
+        // Then
+        testObject.fakeHandelDeath.checkFirstOpeningCalled(0)
+        testObject.observable.checkUiState(SubscriptionUiState.Empty)
+        testObject.observable.checkUpdateCalledCount(0)
+        testObject.interactor.checkSubscribeCalledTimes(1)
     }
 
     @Test
-    fun test_death_after_success() {
-        val saveAndRestore = FakeSaveAndRestore.Base()
+    fun `Given death happened on Success step when re-init then death handled and Success state restored`() = with(
+        TestObjects()
+    ) {
+        // When
         representative.init(saveAndRestore)
+        representative.startGettingUpdates(callback)
 
-        // asserts
+        // Then
         fakeHandelDeath.checkFirstOpeningCalled(1)
         observable.checkUiState(SubscriptionUiState.Initial)
-
-        val callback = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
-        representative.startGettingUpdates(callback)
         observable.checkUpdateObserverCalled(callback)
 
+        // When
         representative.subscribe()
+
+        // Then
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
         runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
+
+        // When
         representative.stopGettingUpdates()
-        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
         representative.saveState(saveAndRestore)
 
-        // death
-        setup()
+        // Then
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
 
-        representative.init(saveAndRestore)
-        fakeHandelDeath.checkFirstOpeningCalled(0)
-        observable.checkUiState(SubscriptionUiState.Success)
-        observable.checkUpdateCalledCount(1)
-        interactor.checkSubscribeCalledTimes(0)
+        // death
+        // Given
+        val testObject = TestObjects()
+
+        // When
+        testObject.representative.init(saveAndRestore)
+
+        // Then
+        testObject.fakeHandelDeath.checkFirstOpeningCalled(0)
+        testObject.observable.checkUiState(SubscriptionUiState.Success)
+        testObject.observable.checkUpdateCalledCount(1)
+        testObject.interactor.checkSubscribeCalledTimes(0)
     }
 
     @Test
-    fun test_death_after_success_observed() {
-        val saveAndRestore = FakeSaveAndRestore.Base()
+    fun `Given death happened after success when re-init then death handled and any updates not called`() = with(
+        TestObjects()
+    ) {
+        // When
         representative.init(saveAndRestore)
+        representative.startGettingUpdates(callback)
 
-        // asserts
+        // Then
         fakeHandelDeath.checkFirstOpeningCalled(1)
         observable.checkUiState(SubscriptionUiState.Initial)
-
-        val callback = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
-        representative.startGettingUpdates(callback)
         observable.checkUpdateObserverCalled(callback)
 
+        // When
         representative.subscribe()
+
+        // Then
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
         runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
+
+        // When
         representative.observed()
-        observable.checkClearCold()
         representative.stopGettingUpdates()
-        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
         representative.saveState(saveAndRestore)
 
-        // death
-        setup()
+        // Then
+        observable.checkClearCold()
+        observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
 
-        representative.init(saveAndRestore)
-        fakeHandelDeath.checkFirstOpeningCalled(0)
-        observable.checkUiState(SubscriptionUiState.Empty)
-        observable.checkUpdateCalledCount(0)
-        interactor.checkSubscribeCalledTimes(0)
+        // death
+        // Given
+        val testObject = TestObjects()
+
+        // When
+        testObject.representative.init(saveAndRestore)
+
+        // Then
+        testObject.fakeHandelDeath.checkFirstOpeningCalled(0)
+        testObject.observable.checkUiState(SubscriptionUiState.Empty)
+        testObject.observable.checkUpdateCalledCount(0)
+        testObject.interactor.checkSubscribeCalledTimes(0)
     }
 
     @Test
-    fun test_cannot_go_back() {
-        val saveAndRestore = FakeSaveAndRestore.Base()
+    fun `Given Loading state when comeback then clear not invoked`() = with(TestObjects()) {
+        // When
         representative.init(saveAndRestore)
-        val callback = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
-
         representative.startGettingUpdates(callback)
-        observable.checkUpdateObserverCalled(callback)
-
         representative.subscribe()
         representative.comeback()
 
+        // Then
         runAsync.checkClearCalledTimes(0)
     }
 
     @Test
-    fun test_can_go_back() {
-        val saveAndRestore = FakeSaveAndRestore.Base()
+    fun `Given Loading finished when comeback then clear invoked`() = with(TestObjects()) {
+        // When
         representative.init(saveAndRestore)
-        val callback = object : SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = Unit
-        }
-
         representative.startGettingUpdates(callback)
-        observable.checkUpdateObserverCalled(callback)
-
         representative.subscribe()
         runAsync.pingResult()
         representative.comeback()
 
+        // Then
         runAsync.checkClearCalledTimes(1)
     }
 }

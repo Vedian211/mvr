@@ -1,5 +1,6 @@
 package com.example.playground.mvr.dashboard
 
+import com.example.playground.mvr.core.ClearRepresentative
 import com.example.playground.mvr.core.Representative
 import com.example.playground.mvr.core.UiObserver
 import com.example.playground.mvr.main.Navigation
@@ -10,8 +11,12 @@ interface DashboardRepresentative: Representative<PremiumDashboardUiState> {
     fun play()
     fun observed() = Unit
 
-    class Premium(private val observable: PremiumDashboardObservable): DashboardRepresentative {
+    class Premium(
+        private val observable: PremiumDashboardObservable,
+        private val clear: ClearRepresentative
+    ): DashboardRepresentative {
         override fun play() {
+            clear.clear(DashboardRepresentative::class.java)
             observable.update(PremiumDashboardUiState.Playing)
         }
 

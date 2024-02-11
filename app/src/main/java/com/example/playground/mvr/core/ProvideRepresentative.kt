@@ -5,7 +5,7 @@ import com.example.playground.mvr.dashboard.DashboardRepresentative
 import com.example.playground.mvr.main.MainModule
 import com.example.playground.mvr.main.MainRepresentative
 import com.example.playground.mvr.subscription.SubscriptionModule
-import com.example.playground.mvr.subscription.SubscriptionRepresentative
+import com.example.playground.mvr.subscription.presentation.SubscriptionRepresentative
 
 @Suppress("UNCHECKED_CAST")
 interface ProvideRepresentative {
@@ -16,7 +16,7 @@ interface ProvideRepresentative {
         override fun <T : Representative<*>> provideRepresentative(clazz: Class<T>): T {
             return when (clazz) {
                 MainRepresentative::class.java -> MainModule(core).representative()
-                DashboardRepresentative::class.java -> DashboardModule(core).representative()
+                DashboardRepresentative::class.java -> DashboardModule(core, clear).representative()
                 SubscriptionRepresentative::class.java -> SubscriptionModule(core, clear).representative()
                 else -> throw Exception("Unknown class $clazz")
             } as T

@@ -1,6 +1,5 @@
-package com.example.playground.mvr.subscription
+package com.example.playground.mvr.subscription.presentation
 
-import android.util.Log
 import com.example.playground.mvr.core.HideAndShow
 import java.io.Serializable
 
@@ -28,7 +27,6 @@ interface SubscriptionUiState: Serializable {
             representative: SubscriptionInner,
             observable: SubscriptionObservable
         ) {
-            Log.d("MVR", "SubscriptionUiState.Loading restoreAfterDeath: ")
             representative.subscribeInner()
         }
 

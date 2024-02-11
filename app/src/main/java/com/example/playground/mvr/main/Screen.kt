@@ -3,7 +3,7 @@ package com.example.playground.mvr.main
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.playground.mvr.dashboard.DashboardFragment
-import com.example.playground.mvr.subscription.SubscriptionFragment
+import com.example.playground.mvr.subscription.presentation.SubscriptionFragment
 
 interface Screen {
 

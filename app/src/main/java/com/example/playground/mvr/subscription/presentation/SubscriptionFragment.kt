@@ -1,4 +1,4 @@
-package com.example.playground.mvr.subscription
+package com.example.playground.mvr.subscription.presentation
 
 import android.os.Bundle
 import android.view.View
@@ -7,6 +7,7 @@ import com.example.playground.mvr.core.CustomButton
 import com.example.playground.mvr.core.CustomProgressBar
 import com.example.playground.mvr.core.UiObserver
 import com.example.playground.mvr.main.BaseFragment
+import com.example.playground.mvr.subscription.SaveAndRestoreSubscriptionUiState
 
 class SubscriptionFragment: BaseFragment<SubscriptionRepresentative>(R.layout.fragment_subscription) {
 

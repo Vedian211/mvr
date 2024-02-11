@@ -30,7 +30,11 @@ interface Screen {
     }
 
     object Dashboard: Replace(DashboardFragment::class.java)
-    object Subscription: Add(SubscriptionFragment::class.java)
+    object Subscription: Replace(SubscriptionFragment::class.java)
+
+    object Pop : Screen {
+        override fun show(fragmentManager: FragmentManager, containerId: Int) = fragmentManager.popBackStack()
+    }
 
     object Empty: Screen {
         override fun show(fragmentManager: FragmentManager, containerId: Int) = Unit

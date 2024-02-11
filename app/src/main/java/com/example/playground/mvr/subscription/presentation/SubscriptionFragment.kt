@@ -2,6 +2,7 @@ package com.example.playground.mvr.subscription.presentation
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import com.example.playground.R
 import com.example.playground.mvr.core.CustomButton
 import com.example.playground.mvr.core.CustomProgressBar
@@ -20,8 +21,16 @@ class SubscriptionFragment: BaseFragment<SubscriptionRepresentative>(R.layout.fr
         val btnFinish = view.findViewById<CustomButton>(R.id.finishButton)
         val pb = view.findViewById<CustomProgressBar>(R.id.progressBar)
 
+        activity?.onBackPressedDispatcher?.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    representative.comeback()
+                }
+            })
+
         observer = object: SubscriptionObserver {
-            override fun update(data: SubscriptionUiState) = requireActivity().runOnUiThread {
+            override fun update(data: SubscriptionUiState) {
                 data.observed(representative)
                 data.show(btnSubscribe, pb, btnFinish)
             }

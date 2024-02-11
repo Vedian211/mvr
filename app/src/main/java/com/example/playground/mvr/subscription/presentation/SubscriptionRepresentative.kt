@@ -3,6 +3,7 @@ package com.example.playground.mvr.subscription.presentation
 import com.example.playground.mvr.core.ClearRepresentative
 import com.example.playground.mvr.core.HandleDeath
 import com.example.playground.mvr.core.Representative
+import com.example.playground.mvr.core.RunAsync
 import com.example.playground.mvr.core.UiObserver
 import com.example.playground.mvr.main.Navigation
 import com.example.playground.mvr.main.Screen
@@ -14,6 +15,7 @@ interface SubscriptionRepresentative: Representative<SubscriptionUiState>, SaveS
 
     fun subscribe()
     fun finish()
+    fun comeback()
     fun init(restoreState: SaveAndRestoreSubscriptionUiState.Restore)
 
     class Base(
@@ -21,21 +23,36 @@ interface SubscriptionRepresentative: Representative<SubscriptionUiState>, SaveS
         private val observable: SubscriptionObservable,
         private val navigation: Navigation.Update,
         private val clear: ClearRepresentative,
-        private val interactor: SubscriptionInteractor
-    ): SubscriptionRepresentative {
+        private val interactor: SubscriptionInteractor,
+        runAsync: RunAsync
+    ): SubscriptionRepresentative, Representative.Abstract<SubscriptionUiState>(runAsync = runAsync) {
+
+        private var canGoBack = true
 
         override fun subscribe() {
+            canGoBack = false
             observable.update(SubscriptionUiState.Loading)
             subscribeInner()
         }
 
         override fun subscribeInner() {
-            interactor.subscribe { observable.update(SubscriptionUiState.Success) }
+            handleAsync(
+                backgroundBlock = { interactor.subscribe() },
+                uiBlock = {
+                    observable.update(SubscriptionUiState.Success)
+                    canGoBack = true
+                }
+            )
         }
 
         override fun finish() {
+            clear()
             clear.clear(SubscriptionRepresentative::class.java)
             navigation.update(Screen.Dashboard)
+        }
+
+        override fun comeback() {
+            if (canGoBack) finish()
         }
 
         override fun startGettingUpdates(uiObserver: UiObserver<SubscriptionUiState>) {

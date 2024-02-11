@@ -10,6 +10,7 @@ import com.example.playground.mvr.playing.fakes.FakeHandelDeath
 import com.example.playground.mvr.playing.fakes.FakeInteractor
 import com.example.playground.mvr.playing.fakes.FakeNavigation
 import com.example.playground.mvr.playing.fakes.FakeObservable
+import com.example.playground.mvr.playing.fakes.FakeRunAsync
 import com.example.playground.mvr.playing.fakes.FakeSaveAndRestore
 import org.junit.Test
 
@@ -21,6 +22,7 @@ class SubscriptionRepresentative2Test {
         val observable by lazy { FakeObservable.Base() }
         val interactor by lazy { FakeInteractor.Base() }
         val navigation by lazy { FakeNavigation.Base() }
+        val runAsync by lazy { FakeRunAsync.Base() }
         val clear by lazy { FakeClear.Base() }
         val callback by lazy {
             object : SubscriptionObserver {
@@ -33,6 +35,7 @@ class SubscriptionRepresentative2Test {
                 observable = observable,
                 interactor = interactor,
                 navigation = navigation,
+                runAsync = runAsync,
                 clear = clear
             )
         }
@@ -59,7 +62,7 @@ class SubscriptionRepresentative2Test {
         // Then
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
     }
 
@@ -158,7 +161,7 @@ class SubscriptionRepresentative2Test {
         // Then
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
 
         // When
@@ -199,7 +202,7 @@ class SubscriptionRepresentative2Test {
         // Then
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
 
         // When
@@ -223,5 +226,30 @@ class SubscriptionRepresentative2Test {
         testObject.observable.checkUiState(SubscriptionUiState.Empty)
         testObject.observable.checkUpdateCalledCount(0)
         testObject.interactor.checkSubscribeCalledTimes(0)
+    }
+
+    @Test
+    fun `Given Loading state when comeback then clear not invoked`() = with(TestObjects()) {
+        // When
+        representative.init(saveAndRestore)
+        representative.startGettingUpdates(callback)
+        representative.subscribe()
+        representative.comeback()
+
+        // Then
+        runAsync.checkClearCalledTimes(0)
+    }
+
+    @Test
+    fun `Given Loading finished when comeback then clear invoked`() = with(TestObjects()) {
+        // When
+        representative.init(saveAndRestore)
+        representative.startGettingUpdates(callback)
+        representative.subscribe()
+        runAsync.pingResult()
+        representative.comeback()
+
+        // Then
+        runAsync.checkClearCalledTimes(1)
     }
 }

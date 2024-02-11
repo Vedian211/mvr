@@ -1,17 +1,12 @@
 package com.example.playground.mvr.core
 
-import androidx.annotation.MainThread
-
 interface UiObservable<T: Any>: UiUpdate<T>, UpdateObserver<T> {
 
     fun clear()
 
-    abstract class Single<T: Any>(private val empty: T): UiObservable<T> {
+    abstract class Base<T: Any>(private val empty: T): UiObservable<T> {
 
-        @Volatile
         private var observer: UiObserver<T> = UiObserver.Empty()
-
-        @Volatile
         protected var cache: T = empty
 
         override fun clear() {
@@ -19,8 +14,7 @@ interface UiObservable<T: Any>: UiUpdate<T>, UpdateObserver<T> {
         }
 
 
-        @MainThread
-        override fun updateObserver(uiObserver: UiObserver<T>) = synchronized(this) {
+        override fun updateObserver(uiObserver: UiObserver<T>) {
             observer = uiObserver
             observer.update(cache)
         }
@@ -28,7 +22,7 @@ interface UiObservable<T: Any>: UiUpdate<T>, UpdateObserver<T> {
         /**
          * Called by Model
          */
-        override fun update(data: T) = synchronized(this) {
+        override fun update(data: T) {
             cache = data
             observer.update(cache)
         }

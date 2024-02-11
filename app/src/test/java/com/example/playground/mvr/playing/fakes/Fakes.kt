@@ -3,6 +3,7 @@ package com.example.playground.mvr.playing.fakes
 import com.example.playground.mvr.core.ClearRepresentative
 import com.example.playground.mvr.core.HandleDeath
 import com.example.playground.mvr.core.Representative
+import com.example.playground.mvr.core.RunAsync
 import com.example.playground.mvr.core.UiObserver
 import com.example.playground.mvr.main.Navigation
 import com.example.playground.mvr.main.Screen
@@ -11,7 +12,9 @@ import com.example.playground.mvr.subscription.domain.SubscriptionInteractor
 import com.example.playground.mvr.subscription.presentation.SubscriptionObservable
 import com.example.playground.mvr.subscription.presentation.SubscriptionObserver
 import com.example.playground.mvr.subscription.presentation.SubscriptionUiState
-import org.junit.Assert
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.*
 
 interface FakeSaveAndRestore: SaveAndRestoreSubscriptionUiState.Mutable {
 
@@ -41,7 +44,7 @@ interface FakeNavigation: Navigation.Update {
 
         private var updateCalledWithScreen: Screen = Screen.Empty
         override fun checkUpdated(screen: Screen) {
-            Assert.assertEquals(screen, updateCalledWithScreen)
+            assertEquals(screen, updateCalledWithScreen)
         }
 
         override fun update(data: Screen) {
@@ -52,29 +55,57 @@ interface FakeNavigation: Navigation.Update {
 
 interface FakeInteractor: SubscriptionInteractor {
 
-    fun pingCallback()
     fun checkSubscribeCalledTimes(times: Int)
 
     class Base: FakeInteractor {
 
-        private var cachedCallback: () -> Unit = {}
         private var subscribeCountTime: Int = 0
 
         override fun checkSubscribeCalledTimes(times: Int) {
-            Assert.assertEquals(times, subscribeCountTime)
+            assertEquals(times, subscribeCountTime)
         }
 
-        override fun pingCallback() {
-            cachedCallback.invoke()
-        }
-
-        override fun subscribe(callback: () -> Unit) {
-            cachedCallback = callback
+        override suspend fun subscribe() {
             subscribeCountTime ++
         }
     }
 }
 
+interface FakeRunAsync: RunAsync {
+
+    fun checkClearCalledTimes(times: Int)
+    fun pingResult()
+
+    @Suppress("UNCHECKED_CAST")
+    class Base: FakeRunAsync {
+
+        private var cachedBlock: (Any) -> Unit = { }
+        private var cached: Any = Unit
+        private var clearCounter: Int = 0
+
+        override fun checkClearCalledTimes(times: Int) {
+            assertEquals(times, clearCounter)
+        }
+
+        override fun pingResult() {
+            cachedBlock.invoke(cached)
+        }
+
+        override fun <T : Any> runAsync(
+            scope: CoroutineScope,
+            backgroundBlock: suspend () -> T,
+            uiBlock: (T) -> Unit
+        ) = runBlocking {
+            cached = backgroundBlock.invoke()
+            cachedBlock = uiBlock as ((Any) -> Unit)
+        }
+
+        override fun clear() {
+            clearCounter ++
+        }
+
+    }
+}
 
 interface FakeClear: ClearRepresentative {
 
@@ -85,7 +116,7 @@ interface FakeClear: ClearRepresentative {
         private var clearCalledClazz: Class<out Representative<*>>? = null
 
         override fun checkClearCalledWith(clazz: Class<out Representative<*>>) {
-            Assert.assertEquals(clazz, clearCalledClazz)
+            assertEquals(clazz, clearCalledClazz)
         }
 
         override fun clear(clazz: Class<out Representative<*>>) {
@@ -106,17 +137,16 @@ interface FakeObservable: SubscriptionObservable {
         private var clearCalled = false
         private var updateCalledCount = 0
         private var cache: SubscriptionUiState = SubscriptionUiState.Empty
-        private var observerCached: UiObserver<SubscriptionUiState> = object :
-            SubscriptionObserver {
+        private var observerCached: UiObserver<SubscriptionUiState> = object : SubscriptionObserver {
             override fun update(data: SubscriptionUiState) = Unit
         }
 
         override fun checkUpdateCalledCount(times: Int) {
-            Assert.assertEquals(times, updateCalledCount)
+            assertEquals(times, updateCalledCount)
         }
 
         override fun checkClearCold() {
-            Assert.assertEquals(true, clearCalled)
+            assertEquals(true, clearCalled)
             clearCalled = false
         }
 
@@ -131,11 +161,11 @@ interface FakeObservable: SubscriptionObservable {
         }
 
         override fun checkUiState(expected: SubscriptionUiState) {
-            Assert.assertEquals(expected, cache)
+            assertEquals(expected, cache)
         }
 
         override fun checkUpdateObserverCalled(observer: SubscriptionObserver) {
-            Assert.assertEquals(observer, observerCached)
+            assertEquals(observer, observerCached)
         }
 
         override fun updateObserver(uiObserver: UiObserver<SubscriptionUiState>) {
@@ -159,7 +189,7 @@ interface FakeHandelDeath: HandleDeath {
         private var deathHappened = true
 
         override fun checkFirstOpeningCalled(times: Int) {
-            Assert.assertEquals(times, counter)
+            assertEquals(times, counter)
         }
 
         override fun firstOpening() {

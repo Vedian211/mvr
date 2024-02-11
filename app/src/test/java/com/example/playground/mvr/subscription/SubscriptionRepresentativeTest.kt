@@ -1,18 +1,17 @@
 package com.example.playground.mvr.subscription
 
-import com.example.playground.mvr.core.ClearRepresentative
-import com.example.playground.mvr.core.HandleDeath
-import com.example.playground.mvr.core.Representative
-import com.example.playground.mvr.core.UiObserver
-import com.example.playground.mvr.main.Navigation
 import com.example.playground.mvr.main.Screen
-import com.example.playground.mvr.subscription.domain.SubscriptionInteractor
+import com.example.playground.mvr.playing.fakes.FakeClear
+import com.example.playground.mvr.playing.fakes.FakeHandelDeath
+import com.example.playground.mvr.playing.fakes.FakeInteractor
+import com.example.playground.mvr.playing.fakes.FakeNavigation
+import com.example.playground.mvr.playing.fakes.FakeObservable
+import com.example.playground.mvr.playing.fakes.FakeRunAsync
+import com.example.playground.mvr.playing.fakes.FakeSaveAndRestore
 import com.example.playground.mvr.subscription.presentation.EmptySubscriptionObserver
-import com.example.playground.mvr.subscription.presentation.SubscriptionObservable
 import com.example.playground.mvr.subscription.presentation.SubscriptionObserver
 import com.example.playground.mvr.subscription.presentation.SubscriptionRepresentative
 import com.example.playground.mvr.subscription.presentation.SubscriptionUiState
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -23,6 +22,7 @@ class SubscriptionRepresentativeTest {
     private lateinit var observable: FakeObservable
     private lateinit var interactor: FakeInteractor
     private lateinit var navigation: FakeNavigation
+    private lateinit var runAsync: FakeRunAsync
     private lateinit var clear: FakeClear
 
     @Before
@@ -31,6 +31,7 @@ class SubscriptionRepresentativeTest {
         observable = FakeObservable.Base()
         interactor = FakeInteractor.Base()
         navigation = FakeNavigation.Base()
+        runAsync = FakeRunAsync.Base()
         clear = FakeClear.Base()
 
         representative = SubscriptionRepresentative.Base(
@@ -38,6 +39,7 @@ class SubscriptionRepresentativeTest {
             observable = observable,
             interactor = interactor,
             navigation = navigation,
+            runAsync = runAsync,
             clear = clear
         )
     }
@@ -61,7 +63,7 @@ class SubscriptionRepresentativeTest {
         representative.subscribe()
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
 
         representative.observed()
@@ -148,7 +150,7 @@ class SubscriptionRepresentativeTest {
         representative.subscribe()
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
         representative.stopGettingUpdates()
         observable.checkUpdateObserverCalled(EmptySubscriptionObserver)
@@ -182,7 +184,7 @@ class SubscriptionRepresentativeTest {
         representative.subscribe()
         observable.checkUiState(SubscriptionUiState.Loading)
         interactor.checkSubscribeCalledTimes(1)
-        interactor.pingCallback()
+        runAsync.pingResult()
         observable.checkUiState(SubscriptionUiState.Success)
         representative.observed()
         observable.checkClearCold()
@@ -200,167 +202,38 @@ class SubscriptionRepresentativeTest {
         interactor.checkSubscribeCalledTimes(0)
     }
 
-}
-
-private interface FakeSaveAndRestore: SaveAndRestoreSubscriptionUiState.Mutable {
-
-    class Base: SaveAndRestoreSubscriptionUiState.Mutable {
-
-        private var state: SubscriptionUiState? = null
-
-        override fun save(data: SubscriptionUiState) {
-            state = data
-        }
-
-        override fun restore(): SubscriptionUiState {
-            return state!!
-        }
-
-        override fun isEmpty(): Boolean {
-            return state == null
-        }
-    }
-}
-
-private interface FakeNavigation: Navigation.Update {
-
-    fun checkUpdated(screen: Screen)
-
-    class Base: FakeNavigation {
-
-        private var updateCalledWithScreen: Screen = Screen.Empty
-        override fun checkUpdated(screen: Screen) {
-            assertEquals(screen, updateCalledWithScreen)
-        }
-
-        override fun update(data: Screen) {
-            updateCalledWithScreen = data
-        }
-    }
-}
-
-private interface FakeInteractor: SubscriptionInteractor {
-
-    fun pingCallback()
-    fun checkSubscribeCalledTimes(times: Int)
-
-    class Base: FakeInteractor {
-
-        private var cachedCallback: () -> Unit = {}
-        private var subscribeCountTime: Int = 0
-
-        override fun checkSubscribeCalledTimes(times: Int) {
-            assertEquals(times, subscribeCountTime)
-        }
-
-        override fun pingCallback() {
-            cachedCallback.invoke()
-        }
-
-        override fun subscribe(callback: () -> Unit) {
-            cachedCallback = callback
-            subscribeCountTime ++
-        }
-    }
-}
-
-
-private interface FakeClear: ClearRepresentative {
-
-    fun checkClearCalledWith(clazz: Class<out Representative<*>>)
-
-    class Base: FakeClear {
-
-        private var clearCalledClazz: Class<out Representative<*>>? = null
-
-        override fun checkClearCalledWith(clazz: Class<out Representative<*>>) {
-            assertEquals(clazz, clearCalledClazz)
-        }
-
-        override fun clear(clazz: Class<out Representative<*>>) {
-            clearCalledClazz = clazz
-        }
-    }
-}
-
-private interface FakeObservable: SubscriptionObservable {
-
-    fun checkClearCold()
-    fun checkUpdateCalledCount(times: Int)
-    fun checkUiState(expected: SubscriptionUiState)
-    fun checkUpdateObserverCalled(observer: SubscriptionObserver)
-
-    class Base: FakeObservable {
-
-        private var clearCalled = false
-        private var updateCalledCount = 0
-        private var cache: SubscriptionUiState = SubscriptionUiState.Empty
-        private var observerCached: UiObserver<SubscriptionUiState> = object : SubscriptionObserver {
+    @Test
+    fun test_cannot_go_back() {
+        val saveAndRestore = FakeSaveAndRestore.Base()
+        representative.init(saveAndRestore)
+        val callback = object : SubscriptionObserver {
             override fun update(data: SubscriptionUiState) = Unit
         }
 
-        override fun checkUpdateCalledCount(times: Int) {
-            assertEquals(times, updateCalledCount)
-        }
+        representative.startGettingUpdates(callback)
+        observable.checkUpdateObserverCalled(callback)
 
-        override fun checkClearCold() {
-            assertEquals(true, clearCalled)
-            clearCalled = false
-        }
+        representative.subscribe()
+        representative.comeback()
 
-        override fun clear() {
-            clearCalled = true
-            cache = SubscriptionUiState.Empty
-        }
-
-        override fun update(data: SubscriptionUiState) {
-            cache = data
-            updateCalledCount ++
-        }
-
-        override fun checkUiState(expected: SubscriptionUiState) {
-            assertEquals(expected, cache)
-        }
-
-        override fun checkUpdateObserverCalled(observer: SubscriptionObserver) {
-            assertEquals(observer, observerCached)
-        }
-
-        override fun updateObserver(uiObserver: UiObserver<SubscriptionUiState>) {
-            observerCached = uiObserver
-        }
-
-        override fun saveState(saveState: SaveAndRestoreSubscriptionUiState.Save) {
-            saveState.save(cache)
-        }
-
+        runAsync.checkClearCalledTimes(0)
     }
-}
 
-private interface FakeHandelDeath: HandleDeath {
-
-    fun checkFirstOpeningCalled(times: Int)
-
-    class Base: FakeHandelDeath {
-
-        private var counter: Int = 0
-        private var deathHappened = true
-
-        override fun checkFirstOpeningCalled(times: Int) {
-            assertEquals(times, counter)
+    @Test
+    fun test_can_go_back() {
+        val saveAndRestore = FakeSaveAndRestore.Base()
+        representative.init(saveAndRestore)
+        val callback = object : SubscriptionObserver {
+            override fun update(data: SubscriptionUiState) = Unit
         }
 
-        override fun firstOpening() {
-            deathHappened = false
-            counter ++
-        }
+        representative.startGettingUpdates(callback)
+        observable.checkUpdateObserverCalled(callback)
 
-        override fun didDeathHappen(): Boolean {
-            return deathHappened
-        }
+        representative.subscribe()
+        runAsync.pingResult()
+        representative.comeback()
 
-        override fun deathHandled() {
-            deathHappened = false
-        }
+        runAsync.checkClearCalledTimes(1)
     }
 }

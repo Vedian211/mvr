@@ -13,13 +13,19 @@ interface ProvideNavigation {
     fun navigation(): Navigation.Mutable
 }
 
-interface Core: ProvideNavigation, ProvideSharedPreferences {
+interface ProvideRunAsync {
+    fun runAsync(): RunAsync
+}
+
+interface Core: ProvideNavigation, ProvideSharedPreferences, ProvideRunAsync {
 
     class Base(private val context: Context): Core {
 
         private val navigation = Navigation.Base()
+        private val runAsync = RunAsync.Base(dispatchersList = DispatchersList.Base())
 
         override fun navigation(): Navigation.Mutable = navigation
         override fun sharedPreferences(): SharedPreferences = context.getSharedPreferences("project999", MODE_PRIVATE)
+        override fun runAsync(): RunAsync = runAsync
     }
 }

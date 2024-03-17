@@ -1,5 +1,6 @@
 package com.example.playground.mvr.subscription.data
 
+import android.util.Log
 import kotlinx.coroutines.delay
 
 interface SubscriptionCloudDataSource {
@@ -8,7 +9,9 @@ interface SubscriptionCloudDataSource {
 
     class Base: SubscriptionCloudDataSource {
         override suspend fun subscribe() {
-            delay(1000L)
+            Log.d("SubscriptionCloudDataSource", "subscribe, cloud started")
+            delay(10_000L)
+            Log.d("SubscriptionCloudDataSource", "subscribe, cloud finished")
         }
     }
 

@@ -9,6 +9,7 @@ import com.example.playground.mvr.main.Navigation
 import com.example.playground.mvr.main.Screen
 import com.example.playground.mvr.subscription.SaveAndRestoreSubscriptionUiState
 import com.example.playground.mvr.subscription.domain.SubscriptionInteractor
+import com.example.playground.mvr.subscription.domain.SubscriptionResult
 import com.example.playground.mvr.subscription.presentation.SubscriptionObservable
 import com.example.playground.mvr.subscription.presentation.SubscriptionObserver
 import com.example.playground.mvr.subscription.presentation.SubscriptionUiState
@@ -65,8 +66,13 @@ interface FakeInteractor: SubscriptionInteractor {
             assertEquals(times, subscribeCountTime)
         }
 
-        override suspend fun subscribe() {
+        override suspend fun subscribe(): SubscriptionResult {
             subscribeCountTime ++
+            return SubscriptionResult.NoDataYet
+        }
+
+        override suspend fun subscribeInternal(): SubscriptionResult {
+            return SubscriptionResult.Success
         }
     }
 }
@@ -98,6 +104,13 @@ interface FakeRunAsync: RunAsync {
         ) = runBlocking {
             cached = backgroundBlock.invoke()
             cachedBlock = uiBlock as ((Any) -> Unit)
+        }
+
+        override suspend fun <T : Any> runAsync(
+            backgroundBlock: suspend () -> T,
+            uiBlock: (T) -> Unit
+        ) {
+            uiBlock.invoke(backgroundBlock.invoke())
         }
 
         override fun clear() {
@@ -203,6 +216,16 @@ interface FakeHandelDeath: HandleDeath {
 
         override fun deathHandled() {
             deathHappened = false
+        }
+    }
+}
+
+interface FakeMapper: SubscriptionResult.Mapper {
+
+    class Base(private val observable: FakeObservable): FakeMapper {
+        override fun mapSuccess(canGoBackCallback: (Boolean) -> Unit) {
+            observable.update(SubscriptionUiState.Success)
+            canGoBackCallback.invoke(true)
         }
     }
 }

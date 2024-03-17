@@ -9,6 +9,7 @@ import com.example.playground.mvr.main.Navigation
 import com.example.playground.mvr.main.Screen
 import com.example.playground.mvr.subscription.SaveAndRestoreSubscriptionUiState
 import com.example.playground.mvr.subscription.domain.SubscriptionInteractor
+import com.example.playground.mvr.subscription.domain.SubscriptionResult
 
 interface SubscriptionRepresentative: Representative<SubscriptionUiState>, SaveSubscriptionUiState,
     SubscriptionObserved, SubscriptionInner {
@@ -16,6 +17,7 @@ interface SubscriptionRepresentative: Representative<SubscriptionUiState>, SaveS
     fun subscribe()
     fun finish()
     fun comeback()
+    suspend fun subscribeInternal()
     fun init(restoreState: SaveAndRestoreSubscriptionUiState.Restore)
 
     class Base(
@@ -24,10 +26,12 @@ interface SubscriptionRepresentative: Representative<SubscriptionUiState>, SaveS
         private val navigation: Navigation.Update,
         private val clear: ClearRepresentative,
         private val interactor: SubscriptionInteractor,
+        private val mapper: SubscriptionResult.Mapper,
         runAsync: RunAsync
     ): SubscriptionRepresentative, Representative.Abstract<SubscriptionUiState>(runAsync = runAsync) {
 
         private var canGoBack = true
+        private val uiBlock: (SubscriptionResult) -> Unit = { result -> result.map(mapper) { canGoBack = it } }
 
         override fun subscribe() {
             canGoBack = false
@@ -35,15 +39,15 @@ interface SubscriptionRepresentative: Representative<SubscriptionUiState>, SaveS
             subscribeInner()
         }
 
-        override fun subscribeInner() {
-            handleAsync(
-                backgroundBlock = { interactor.subscribe() },
-                uiBlock = {
-                    observable.update(SubscriptionUiState.Success)
-                    canGoBack = true
-                }
-            )
-        }
+        override fun subscribeInner() = handleAsync(
+            backgroundBlock = { interactor.subscribe() },
+            uiBlock = uiBlock
+        )
+
+        override suspend fun subscribeInternal() = handleAsyncInternal(
+            backgroundBlock = { interactor.subscribeInternal() },
+            uiBlock = uiBlock
+        )
 
         override fun finish() {
             clear()

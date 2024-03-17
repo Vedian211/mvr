@@ -2,6 +2,10 @@ package com.example.playground.mvr.subscription.domain
 
 interface SubsriptionRepository {
 
-    suspend fun subscribe()
+    fun subscribe()
+
+    fun isPremiumUser(): Boolean
+
+    suspend fun subscribeInternal()
 
 }

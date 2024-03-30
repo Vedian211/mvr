@@ -14,14 +14,14 @@ class CustomButton: AppCompatButton, HideAndShow {
 
     override fun onSaveInstanceState(): Parcelable? = super.onSaveInstanceState()?.let {
         val visibilityState = VisibilityState(it)
-        visibilityState.visibile = visibility
+        visibilityState.save(this)
         return visibilityState
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         val visibilityState = state as VisibilityState?
         super.onRestoreInstanceState(visibilityState?.superState)
-        visibilityState?.let { visibility = it.visibile }
+        visibilityState?.restore(this)
     }
 
     override fun hide() {

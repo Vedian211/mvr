@@ -10,13 +10,12 @@ class App: Application(), ProvideRepresentative, ClearRepresentative {
     override fun onCreate() {
         super.onCreate()
         factory = ProvideRepresentative.Factory(
-            makeDependency = MakeDependency(core = Core.Base(context = this), clear = this)
+            core = Core.Base(this),
+            clear = this
         )
     }
 
     override fun <T : Representative<*>> provideRepresentative(clazz: Class<T>): T = factory.provideRepresentative(clazz)
+    override fun clear(clazz: Class<out Representative<*>>) = factory.clear(clazz)
 
-    override fun clear(clazz: Class<out Representative<*>>) {
-        factory.clear(clazz)
-    }
 }

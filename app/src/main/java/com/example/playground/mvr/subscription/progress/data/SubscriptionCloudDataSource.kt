@@ -1,4 +1,4 @@
-package com.example.playground.mvr.subscription.data
+package com.example.playground.mvr.subscription.progress.data
 
 import android.util.Log
 import kotlinx.coroutines.delay

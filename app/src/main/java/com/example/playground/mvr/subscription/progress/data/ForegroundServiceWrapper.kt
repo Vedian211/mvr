@@ -1,4 +1,4 @@
-package com.example.playground.mvr.subscription.data
+package com.example.playground.mvr.subscription.progress.data
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -7,7 +7,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.playground.mvr.core.ProvideRepresentative
-import com.example.playground.mvr.subscription.presentation.SubscriptionRepresentative
+import com.example.playground.mvr.subscription.progress.presentation.SubscriptionProgressRepresentative
+import com.example.playground.mvr.subscription.screen.presentation.SubscriptionRepresentative
 
 interface ForegroundServiceWrapper {
 
@@ -35,7 +36,9 @@ class Worker(
     params = parameters
 ) {
     override suspend fun doWork(): Result {
-        val representative = (applicationContext as ProvideRepresentative).provideRepresentative(SubscriptionRepresentative::class.java)
+        val representative = (applicationContext as ProvideRepresentative).provideRepresentative(
+            SubscriptionProgressRepresentative::class.java
+        )
         representative.subscribeInternal()
         return Result.success()
     }

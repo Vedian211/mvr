@@ -1,10 +1,10 @@
 package com.example.playground.mvr.subscription
 
 import com.example.playground.mvr.main.Screen
-import com.example.playground.mvr.subscription.presentation.EmptySubscriptionObserver
-import com.example.playground.mvr.subscription.presentation.SubscriptionObserver
-import com.example.playground.mvr.subscription.presentation.SubscriptionRepresentative
-import com.example.playground.mvr.subscription.presentation.SubscriptionUiState
+import com.example.playground.mvr.subscription.screen.presentation.EmptySubscriptionObserver
+import com.example.playground.mvr.subscription.screen.presentation.SubscriptionObserver
+import com.example.playground.mvr.subscription.screen.presentation.SubscriptionRepresentative
+import com.example.playground.mvr.subscription.screen.presentation.SubscriptionUiState
 import com.example.playground.mvr.subscription.fakes.FakeClear
 import com.example.playground.mvr.subscription.fakes.FakeHandelDeath
 import com.example.playground.mvr.subscription.fakes.FakeInteractor

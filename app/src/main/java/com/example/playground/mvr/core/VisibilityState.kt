@@ -6,7 +6,15 @@ import android.view.View
 
 class VisibilityState: View.BaseSavedState {
 
-    var visibile: Int = View.VISIBLE
+    private var visibile: Int = View.VISIBLE
+
+    fun save(view: View) {
+        visibile = view.visibility
+    }
+
+    fun restore(view: View) {
+        view.visibility = visibile
+    }
 
     constructor(superState: Parcelable): super(superState)
 

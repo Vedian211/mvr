@@ -3,7 +3,6 @@ package com.example.playground.mvr.main
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.playground.R
-import com.example.playground.mvr.core.App
 import com.example.playground.mvr.core.ProvideRepresentative
 import com.example.playground.mvr.core.Representative
 import com.example.playground.mvr.core.UiObserver

@@ -7,12 +7,12 @@ import com.example.playground.mvr.core.RunAsync
 import com.example.playground.mvr.core.UiObserver
 import com.example.playground.mvr.main.Navigation
 import com.example.playground.mvr.main.Screen
-import com.example.playground.mvr.subscription.SaveAndRestoreSubscriptionUiState
-import com.example.playground.mvr.subscription.domain.SubscriptionInteractor
-import com.example.playground.mvr.subscription.domain.SubscriptionResult
-import com.example.playground.mvr.subscription.presentation.SubscriptionObservable
-import com.example.playground.mvr.subscription.presentation.SubscriptionObserver
-import com.example.playground.mvr.subscription.presentation.SubscriptionUiState
+import com.example.playground.mvr.subscription.screen.presentation.SaveAndRestoreSubscriptionUiState
+import com.example.playground.mvr.subscription.progress.domain.SubscriptionInteractor
+import com.example.playground.mvr.subscription.progress.domain.SubscriptionResult
+import com.example.playground.mvr.subscription.screen.presentation.SubscriptionObservable
+import com.example.playground.mvr.subscription.screen.presentation.SubscriptionObserver
+import com.example.playground.mvr.subscription.screen.presentation.SubscriptionUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -150,7 +150,8 @@ interface FakeObservable: SubscriptionObservable {
         private var clearCalled = false
         private var updateCalledCount = 0
         private var cache: SubscriptionUiState = SubscriptionUiState.Empty
-        private var observerCached: UiObserver<SubscriptionUiState> = object : SubscriptionObserver {
+        private var observerCached: UiObserver<SubscriptionUiState> = object :
+            SubscriptionObserver {
             override fun update(data: SubscriptionUiState) = Unit
         }
 

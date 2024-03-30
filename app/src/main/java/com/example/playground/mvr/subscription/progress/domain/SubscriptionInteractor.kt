@@ -1,11 +1,11 @@
-package com.example.playground.mvr.subscription.domain
+package com.example.playground.mvr.subscription.progress.domain
 
 interface SubscriptionInteractor {
 
     suspend fun subscribe(): SubscriptionResult
     suspend fun subscribeInternal(): SubscriptionResult
 
-    class Base(private val repository: SubsriptionRepository): SubscriptionInteractor {
+    class Base(private val repository: SubscriptionRepository): SubscriptionInteractor {
 
         override suspend fun subscribe() = when {
             repository.isPremiumUser() -> SubscriptionResult.Success
@@ -25,15 +25,16 @@ interface SubscriptionInteractor {
 interface SubscriptionResult {
 
     interface Mapper {
-        fun mapSuccess(canGoBackCallback: (Boolean) -> Unit)
+        fun mapSuccess()
     }
 
-    fun map(mapper: Mapper, canGoBackCallback: (Boolean) -> Unit)
+    fun map(mapper: Mapper)
 
-    object Success: SubscriptionResult {
-        override fun map(mapper: Mapper, canGoBackCallback: (Boolean) -> Unit) = mapper.mapSuccess(canGoBackCallback)
+    object Success : SubscriptionResult {
+        override fun map(mapper: Mapper) = mapper.mapSuccess()
     }
-    object NoDataYet: SubscriptionResult {
-        override fun map(mapper: Mapper, canGoBackCallback: (Boolean) -> Unit) = Unit
+
+    object NoDataYet : SubscriptionResult {
+        override fun map(mapper: Mapper) = Unit
     }
 }

@@ -1,8 +1,7 @@
-package com.example.playground.mvr.subscription
+package com.example.playground.mvr.subscription.screen.presentation
 
 import android.os.Bundle
 import com.example.playground.mvr.core.SaveAndRestoreState
-import com.example.playground.mvr.subscription.presentation.SubscriptionUiState
 
 interface SaveAndRestoreSubscriptionUiState {
 
